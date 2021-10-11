@@ -1,0 +1,849 @@
+---
+title: "Análisis de modelos SOM - Frecuencia datos de entrada: mes"
+output: html_notebook
+---
+
+# Modelo
+
+* ID: 325
+* Descripción: 
+* Frecuencia: mes
+* Variables: fecha_cnt, tmax, tmin, precip, nevada, prof_nieve
+* Dimensiones del mapa: 25,25
+* Iteraciones: 1000
+* Parámetros adicionales: 
+
+```{r}
+source("../../lib/som-utils.R")
+source("../../lib/maps-utils.R")
+```
+
+# Carga del modelo desde disco
+
+```{r}
+mpr.set_base_path_analysis()
+model <- mpr.load_model("som-325.rds.xz")
+summary(model)
+```
+
+```{r}
+plot(model, type="changes")
+```
+
+# Carga del dataset de entrada
+
+```{r}
+df <- mpr.load_data("datos_mes.csv.xz")
+```
+
+```{r}
+df
+```
+
+```{r}
+summary(df)
+```
+
+# Carga de los mapas
+
+```{r}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+spain <- subset(world, admin == "Spain")
+```
+
+# Mapa de densidad
+
+```{r}
+plot(model, type="count", shape = "straight", palette.name = mpr.degrade.bleu)
+```
+
+Número de elementos en cada celda:
+
+```{r}
+nb <- table(model$unit.classif)
+print(nb)
+```
+Comprobación de nodos vacíos:
+
+```{r}
+dim_model <- 25*25;
+len_nb = length(nb);
+empty_nodes <- dim_model != len_nb;
+if (empty_nodes) {
+  print(paste("[Warning] Existen nodos vacíos: ", len_nb, "/", dim_model))
+}
+```
+
+# Mapa de distancia entre vecinos
+
+```{r}
+plot(model, type="dist.neighbours", shape = "straight")
+```
+
+# Influencia de las variables
+
+```{r}
+model_colnames = c("fecha_cnt", "tmax", "tmin", "precip", "nevada", "prof_nieve")
+model_ncol = length(model_colnames)
+```
+
+## Mapa de variables.
+
+```{r}
+plot(model, shape = "straight")
+```
+
+## Mapa de calor por variable
+
+```{r}
+par(mfrow=c(3,4))
+for (j in 1:model_ncol) {
+  plot(model, type="property", property=getCodes(model,1)[,j],
+    palette.name=mpr.coolBlueHotRed,
+    main=model_colnames[j],
+    cex=0.5, shape = "straight")
+}
+```
+
+## Correlación para cada columna del vector de nodos
+
+```{r}
+if (!empty_nodes) {
+  cor <- apply(getCodes(model,1), 2, mpr.weighted.correlation, w=nb, som=model)
+  print(cor)
+}
+```
+
+Representación de cada variable en un mapa de factores:
+
+```{r}
+if (!empty_nodes) {
+  par(mfrow=c(1,1))
+  plot(cor[1,], cor[2,], xlim=c(-1,1), ylim=c(-1,1), type="n")
+  lines(c(-1,1),c(0,0))
+  lines(c(0,0),c(-1,1))
+  text(cor[1,], cor[2,], labels=model_colnames, cex=0.75)
+  symbols(0,0,circles=1,inches=F,add=T)
+}
+```
+
+Importancia de cada variable - varianza ponderada por el tamaño de la celda:
+
+```{r}
+if (!empty_nodes) {
+  sigma2 <- sqrt(apply(getCodes(model,1),2,function(x,effectif)
+     {m<-sum(effectif*(x-weighted.mean(x,effectif))^2)/(sum(effectif)-1)},
+     effectif=nb))
+  print(sort(sigma2,decreasing=T))
+}
+```
+
+# Clustering
+
+```{r}
+if (!empty_nodes) {
+  hac <- mpr.hac(model, nb)
+}
+```
+
+## Visualización de 3 clústeres:
+
+```{r}
+if (!empty_nodes) {
+  plot(hac, hang=-1, labels=F)
+  rect.hclust(hac, k=3)
+}
+```
+
+### Visualización de los clústers en el mapa
+
+A qué clúster pertenece cada nodo del mapa de kohonen:
+
+```{r}
+if (!empty_nodes) {
+  groups <- cutree(hac, k=3)
+  plot(model, type="mapping",
+    bgcol=c("steelblue1","sienna1","yellowgreen","red","blue","yellow","purple","green","white","#1f77b4", '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2')[groups],
+    shape = "straight", labels = "")
+  add.cluster.boundaries(model, clustering=groups)
+}
+```
+
+### Análisis de las observaciones de cada cluster
+
+```{r}
+if (!empty_nodes) {
+  # Asignamos a cada registro su clúster
+  df$cluster <- groups[model$unit.classif]
+}
+```
+
+Nuevos dataframes por cluster
+
+```{r}
+if (!empty_nodes) {
+  # Creo nuevos dataframes, uno por cada clúster.
+  df.cluster01 <- subset(df, cluster==1)
+  df.cluster02 <- subset(df, cluster==2)
+  df.cluster03 <- subset(df, cluster==3)
+
+  # Extraigo del dataframe las features.
+  df.cluster01 <- select(df.cluster01, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster02 <- select(df.cluster02, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster03 <- select(df.cluster03, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+}
+```
+
+```{r}
+if (!empty_nodes) summary(df.cluster01)
+if (!empty_nodes) summary(df.cluster02)
+if (!empty_nodes) summary(df.cluster03)
+```
+
+#### Número de elementos en cada clúster
+
+```{r}
+if (!empty_nodes) {
+  df.clusters.dim <- c(dim(df.cluster01)[1], dim(df.cluster02)[1], dim(df.cluster03)[1])
+  barplot(df.clusters.dim,
+          names.arg = c("cluster01", "cluster02", "cluster03"),
+          col = "steelblue1")
+}
+```
+
+#### Distribución de los datos
+
+```{r fig.height=7}
+if (!empty_nodes) mpr.hist(df.cluster01)
+if (!empty_nodes) mpr.hist(df.cluster02)
+if (!empty_nodes) mpr.hist(df.cluster03)
+```
+
+```{r fig.height=5}
+if (!empty_nodes) mpr.boxplot(df.cluster01)
+if (!empty_nodes) mpr.boxplot(df.cluster02)
+if (!empty_nodes) mpr.boxplot(df.cluster03)
+```
+
+### Localización geográfica de las estaciones de medida de cada cluster
+
+```{r}
+# Agrupa por longitud y latitud para rellenar el mapa con menos datos.
+if (!empty_nodes) {
+  df.cluster01.grouped <- mpr.group_by_geo(df.cluster01)
+  df.cluster02.grouped <- mpr.group_by_geo(df.cluster02)
+  df.cluster03.grouped <- mpr.group_by_geo(df.cluster03)
+}
+```
+
+```{r}
+if (!empty_nodes) mpr.draw_map(spain, df.cluster01.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster02.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster03.grouped)
+```
+
+## Visualización de 4 clústeres:
+
+```{r}
+if (!empty_nodes) {
+  plot(hac, hang=-1, labels=F)
+  rect.hclust(hac, k=4)
+}
+```
+
+### Visualización de los clústers en el mapa
+
+A qué clúster pertenece cada nodo del mapa de kohonen:
+
+```{r}
+if (!empty_nodes) {
+  groups <- cutree(hac, k=4)
+  plot(model, type="mapping",
+    bgcol=c("steelblue1","sienna1","yellowgreen","red","blue","yellow","purple","green","white","#1f77b4", '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2')[groups],
+    shape = "straight", labels = "")
+  add.cluster.boundaries(model, clustering=groups)
+}
+```
+
+### Análisis de las observaciones de cada cluster
+
+```{r}
+if (!empty_nodes) {
+  # Asignamos a cada registro su clúster
+  df$cluster <- groups[model$unit.classif]
+}
+```
+
+Nuevos dataframes por cluster
+
+```{r}
+if (!empty_nodes) {
+  # Creo nuevos dataframes, uno por cada clúster.
+  df.cluster01 <- subset(df, cluster==1)
+  df.cluster02 <- subset(df, cluster==2)
+  df.cluster03 <- subset(df, cluster==3)
+  df.cluster04 <- subset(df, cluster==4)
+
+  # Extraigo del dataframe las features.
+  df.cluster01 <- select(df.cluster01, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster02 <- select(df.cluster02, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster03 <- select(df.cluster03, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster04 <- select(df.cluster04, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+}
+```
+
+```{r}
+if (!empty_nodes) summary(df.cluster01)
+if (!empty_nodes) summary(df.cluster02)
+if (!empty_nodes) summary(df.cluster03)
+if (!empty_nodes) summary(df.cluster04)
+```
+
+#### Número de elementos en cada clúster
+
+```{r}
+if (!empty_nodes) {
+  df.clusters.dim <- c(dim(df.cluster01)[1], dim(df.cluster02)[1], dim(df.cluster03)[1], dim(df.cluster04)[1])
+  barplot(df.clusters.dim,
+          names.arg = c("cluster01", "cluster02", "cluster03", "cluster04"),
+          col = "steelblue1")
+}
+```
+
+#### Distribución de los datos
+
+```{r fig.height=7}
+if (!empty_nodes) mpr.hist(df.cluster01)
+if (!empty_nodes) mpr.hist(df.cluster02)
+if (!empty_nodes) mpr.hist(df.cluster03)
+if (!empty_nodes) mpr.hist(df.cluster04)
+```
+
+```{r fig.height=5}
+if (!empty_nodes) mpr.boxplot(df.cluster01)
+if (!empty_nodes) mpr.boxplot(df.cluster02)
+if (!empty_nodes) mpr.boxplot(df.cluster03)
+if (!empty_nodes) mpr.boxplot(df.cluster04)
+```
+
+### Localización geográfica de las estaciones de medida de cada cluster
+
+```{r}
+# Agrupa por longitud y latitud para rellenar el mapa con menos datos.
+if (!empty_nodes) {
+  df.cluster01.grouped <- mpr.group_by_geo(df.cluster01)
+  df.cluster02.grouped <- mpr.group_by_geo(df.cluster02)
+  df.cluster03.grouped <- mpr.group_by_geo(df.cluster03)
+  df.cluster04.grouped <- mpr.group_by_geo(df.cluster04)
+}
+```
+
+```{r}
+if (!empty_nodes) mpr.draw_map(spain, df.cluster01.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster02.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster03.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster04.grouped)
+```
+
+## Visualización de 5 clústeres:
+
+```{r}
+if (!empty_nodes) {
+  plot(hac, hang=-1, labels=F)
+  rect.hclust(hac, k=5)
+}
+```
+
+### Visualización de los clústers en el mapa
+
+A qué clúster pertenece cada nodo del mapa de kohonen:
+
+```{r}
+if (!empty_nodes) {
+  groups <- cutree(hac, k=5)
+  plot(model, type="mapping",
+    bgcol=c("steelblue1","sienna1","yellowgreen","red","blue","yellow","purple","green","white","#1f77b4", '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2')[groups],
+    shape = "straight", labels = "")
+  add.cluster.boundaries(model, clustering=groups)
+}
+```
+
+### Análisis de las observaciones de cada cluster
+
+```{r}
+if (!empty_nodes) {
+  # Asignamos a cada registro su clúster
+  df$cluster <- groups[model$unit.classif]
+}
+```
+
+Nuevos dataframes por cluster
+
+```{r}
+if (!empty_nodes) {
+  # Creo nuevos dataframes, uno por cada clúster.
+  df.cluster01 <- subset(df, cluster==1)
+  df.cluster02 <- subset(df, cluster==2)
+  df.cluster03 <- subset(df, cluster==3)
+  df.cluster04 <- subset(df, cluster==4)
+  df.cluster05 <- subset(df, cluster==5)
+
+  # Extraigo del dataframe las features.
+  df.cluster01 <- select(df.cluster01, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster02 <- select(df.cluster02, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster03 <- select(df.cluster03, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster04 <- select(df.cluster04, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster05 <- select(df.cluster05, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+}
+```
+
+```{r}
+if (!empty_nodes) summary(df.cluster01)
+if (!empty_nodes) summary(df.cluster02)
+if (!empty_nodes) summary(df.cluster03)
+if (!empty_nodes) summary(df.cluster04)
+if (!empty_nodes) summary(df.cluster05)
+```
+
+#### Número de elementos en cada clúster
+
+```{r}
+if (!empty_nodes) {
+  df.clusters.dim <- c(dim(df.cluster01)[1], dim(df.cluster02)[1], dim(df.cluster03)[1], dim(df.cluster04)[1], dim(df.cluster05)[1])
+  barplot(df.clusters.dim,
+          names.arg = c("cluster01", "cluster02", "cluster03", "cluster04", "cluster05"),
+          col = "steelblue1")
+}
+```
+
+#### Distribución de los datos
+
+```{r fig.height=7}
+if (!empty_nodes) mpr.hist(df.cluster01)
+if (!empty_nodes) mpr.hist(df.cluster02)
+if (!empty_nodes) mpr.hist(df.cluster03)
+if (!empty_nodes) mpr.hist(df.cluster04)
+if (!empty_nodes) mpr.hist(df.cluster05)
+```
+
+```{r fig.height=5}
+if (!empty_nodes) mpr.boxplot(df.cluster01)
+if (!empty_nodes) mpr.boxplot(df.cluster02)
+if (!empty_nodes) mpr.boxplot(df.cluster03)
+if (!empty_nodes) mpr.boxplot(df.cluster04)
+if (!empty_nodes) mpr.boxplot(df.cluster05)
+```
+
+### Localización geográfica de las estaciones de medida de cada cluster
+
+```{r}
+# Agrupa por longitud y latitud para rellenar el mapa con menos datos.
+if (!empty_nodes) {
+  df.cluster01.grouped <- mpr.group_by_geo(df.cluster01)
+  df.cluster02.grouped <- mpr.group_by_geo(df.cluster02)
+  df.cluster03.grouped <- mpr.group_by_geo(df.cluster03)
+  df.cluster04.grouped <- mpr.group_by_geo(df.cluster04)
+  df.cluster05.grouped <- mpr.group_by_geo(df.cluster05)
+}
+```
+
+```{r}
+if (!empty_nodes) mpr.draw_map(spain, df.cluster01.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster02.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster03.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster04.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster05.grouped)
+```
+
+## Visualización de 6 clústeres:
+
+```{r}
+if (!empty_nodes) {
+  plot(hac, hang=-1, labels=F)
+  rect.hclust(hac, k=6)
+}
+```
+
+### Visualización de los clústers en el mapa
+
+A qué clúster pertenece cada nodo del mapa de kohonen:
+
+```{r}
+if (!empty_nodes) {
+  groups <- cutree(hac, k=6)
+  plot(model, type="mapping",
+    bgcol=c("steelblue1","sienna1","yellowgreen","red","blue","yellow","purple","green","white","#1f77b4", '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2')[groups],
+    shape = "straight", labels = "")
+  add.cluster.boundaries(model, clustering=groups)
+}
+```
+
+### Análisis de las observaciones de cada cluster
+
+```{r}
+if (!empty_nodes) {
+  # Asignamos a cada registro su clúster
+  df$cluster <- groups[model$unit.classif]
+}
+```
+
+Nuevos dataframes por cluster
+
+```{r}
+if (!empty_nodes) {
+  # Creo nuevos dataframes, uno por cada clúster.
+  df.cluster01 <- subset(df, cluster==1)
+  df.cluster02 <- subset(df, cluster==2)
+  df.cluster03 <- subset(df, cluster==3)
+  df.cluster04 <- subset(df, cluster==4)
+  df.cluster05 <- subset(df, cluster==5)
+  df.cluster06 <- subset(df, cluster==6)
+
+  # Extraigo del dataframe las features.
+  df.cluster01 <- select(df.cluster01, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster02 <- select(df.cluster02, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster03 <- select(df.cluster03, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster04 <- select(df.cluster04, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster05 <- select(df.cluster05, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster06 <- select(df.cluster06, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+}
+```
+
+```{r}
+if (!empty_nodes) summary(df.cluster01)
+if (!empty_nodes) summary(df.cluster02)
+if (!empty_nodes) summary(df.cluster03)
+if (!empty_nodes) summary(df.cluster04)
+if (!empty_nodes) summary(df.cluster05)
+if (!empty_nodes) summary(df.cluster06)
+```
+
+#### Número de elementos en cada clúster
+
+```{r}
+if (!empty_nodes) {
+  df.clusters.dim <- c(dim(df.cluster01)[1], dim(df.cluster02)[1], dim(df.cluster03)[1], dim(df.cluster04)[1], dim(df.cluster05)[1], dim(df.cluster06)[1])
+  barplot(df.clusters.dim,
+          names.arg = c("cluster01", "cluster02", "cluster03", "cluster04", "cluster05", "cluster06"),
+          col = "steelblue1")
+}
+```
+
+#### Distribución de los datos
+
+```{r fig.height=7}
+if (!empty_nodes) mpr.hist(df.cluster01)
+if (!empty_nodes) mpr.hist(df.cluster02)
+if (!empty_nodes) mpr.hist(df.cluster03)
+if (!empty_nodes) mpr.hist(df.cluster04)
+if (!empty_nodes) mpr.hist(df.cluster05)
+if (!empty_nodes) mpr.hist(df.cluster06)
+```
+
+```{r fig.height=5}
+if (!empty_nodes) mpr.boxplot(df.cluster01)
+if (!empty_nodes) mpr.boxplot(df.cluster02)
+if (!empty_nodes) mpr.boxplot(df.cluster03)
+if (!empty_nodes) mpr.boxplot(df.cluster04)
+if (!empty_nodes) mpr.boxplot(df.cluster05)
+if (!empty_nodes) mpr.boxplot(df.cluster06)
+```
+
+### Localización geográfica de las estaciones de medida de cada cluster
+
+```{r}
+# Agrupa por longitud y latitud para rellenar el mapa con menos datos.
+if (!empty_nodes) {
+  df.cluster01.grouped <- mpr.group_by_geo(df.cluster01)
+  df.cluster02.grouped <- mpr.group_by_geo(df.cluster02)
+  df.cluster03.grouped <- mpr.group_by_geo(df.cluster03)
+  df.cluster04.grouped <- mpr.group_by_geo(df.cluster04)
+  df.cluster05.grouped <- mpr.group_by_geo(df.cluster05)
+  df.cluster06.grouped <- mpr.group_by_geo(df.cluster06)
+}
+```
+
+```{r}
+if (!empty_nodes) mpr.draw_map(spain, df.cluster01.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster02.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster03.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster04.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster05.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster06.grouped)
+```
+
+## Visualización de 8 clústeres:
+
+```{r}
+if (!empty_nodes) {
+  plot(hac, hang=-1, labels=F)
+  rect.hclust(hac, k=8)
+}
+```
+
+### Visualización de los clústers en el mapa
+
+A qué clúster pertenece cada nodo del mapa de kohonen:
+
+```{r}
+if (!empty_nodes) {
+  groups <- cutree(hac, k=8)
+  plot(model, type="mapping",
+    bgcol=c("steelblue1","sienna1","yellowgreen","red","blue","yellow","purple","green","white","#1f77b4", '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2')[groups],
+    shape = "straight", labels = "")
+  add.cluster.boundaries(model, clustering=groups)
+}
+```
+
+### Análisis de las observaciones de cada cluster
+
+```{r}
+if (!empty_nodes) {
+  # Asignamos a cada registro su clúster
+  df$cluster <- groups[model$unit.classif]
+}
+```
+
+Nuevos dataframes por cluster
+
+```{r}
+if (!empty_nodes) {
+  # Creo nuevos dataframes, uno por cada clúster.
+  df.cluster01 <- subset(df, cluster==1)
+  df.cluster02 <- subset(df, cluster==2)
+  df.cluster03 <- subset(df, cluster==3)
+  df.cluster04 <- subset(df, cluster==4)
+  df.cluster05 <- subset(df, cluster==5)
+  df.cluster06 <- subset(df, cluster==6)
+  df.cluster07 <- subset(df, cluster==7)
+  df.cluster08 <- subset(df, cluster==8)
+
+  # Extraigo del dataframe las features.
+  df.cluster01 <- select(df.cluster01, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster02 <- select(df.cluster02, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster03 <- select(df.cluster03, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster04 <- select(df.cluster04, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster05 <- select(df.cluster05, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster06 <- select(df.cluster06, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster07 <- select(df.cluster07, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster08 <- select(df.cluster08, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+}
+```
+
+```{r}
+if (!empty_nodes) summary(df.cluster01)
+if (!empty_nodes) summary(df.cluster02)
+if (!empty_nodes) summary(df.cluster03)
+if (!empty_nodes) summary(df.cluster04)
+if (!empty_nodes) summary(df.cluster05)
+if (!empty_nodes) summary(df.cluster06)
+if (!empty_nodes) summary(df.cluster07)
+if (!empty_nodes) summary(df.cluster08)
+```
+
+#### Número de elementos en cada clúster
+
+```{r}
+if (!empty_nodes) {
+  df.clusters.dim <- c(dim(df.cluster01)[1], dim(df.cluster02)[1], dim(df.cluster03)[1], dim(df.cluster04)[1], dim(df.cluster05)[1], dim(df.cluster06)[1], dim(df.cluster07)[1], dim(df.cluster08)[1])
+  barplot(df.clusters.dim,
+          names.arg = c("cluster01", "cluster02", "cluster03", "cluster04", "cluster05", "cluster06", "cluster07", "cluster08"),
+          col = "steelblue1")
+}
+```
+
+#### Distribución de los datos
+
+```{r fig.height=7}
+if (!empty_nodes) mpr.hist(df.cluster01)
+if (!empty_nodes) mpr.hist(df.cluster02)
+if (!empty_nodes) mpr.hist(df.cluster03)
+if (!empty_nodes) mpr.hist(df.cluster04)
+if (!empty_nodes) mpr.hist(df.cluster05)
+if (!empty_nodes) mpr.hist(df.cluster06)
+if (!empty_nodes) mpr.hist(df.cluster07)
+if (!empty_nodes) mpr.hist(df.cluster08)
+```
+
+```{r fig.height=5}
+if (!empty_nodes) mpr.boxplot(df.cluster01)
+if (!empty_nodes) mpr.boxplot(df.cluster02)
+if (!empty_nodes) mpr.boxplot(df.cluster03)
+if (!empty_nodes) mpr.boxplot(df.cluster04)
+if (!empty_nodes) mpr.boxplot(df.cluster05)
+if (!empty_nodes) mpr.boxplot(df.cluster06)
+if (!empty_nodes) mpr.boxplot(df.cluster07)
+if (!empty_nodes) mpr.boxplot(df.cluster08)
+```
+
+### Localización geográfica de las estaciones de medida de cada cluster
+
+```{r}
+# Agrupa por longitud y latitud para rellenar el mapa con menos datos.
+if (!empty_nodes) {
+  df.cluster01.grouped <- mpr.group_by_geo(df.cluster01)
+  df.cluster02.grouped <- mpr.group_by_geo(df.cluster02)
+  df.cluster03.grouped <- mpr.group_by_geo(df.cluster03)
+  df.cluster04.grouped <- mpr.group_by_geo(df.cluster04)
+  df.cluster05.grouped <- mpr.group_by_geo(df.cluster05)
+  df.cluster06.grouped <- mpr.group_by_geo(df.cluster06)
+  df.cluster07.grouped <- mpr.group_by_geo(df.cluster07)
+  df.cluster08.grouped <- mpr.group_by_geo(df.cluster08)
+}
+```
+
+```{r}
+if (!empty_nodes) mpr.draw_map(spain, df.cluster01.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster02.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster03.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster04.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster05.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster06.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster07.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster08.grouped)
+```
+
+## Visualización de 10 clústeres:
+
+```{r}
+if (!empty_nodes) {
+  plot(hac, hang=-1, labels=F)
+  rect.hclust(hac, k=10)
+}
+```
+
+### Visualización de los clústers en el mapa
+
+A qué clúster pertenece cada nodo del mapa de kohonen:
+
+```{r}
+if (!empty_nodes) {
+  groups <- cutree(hac, k=10)
+  plot(model, type="mapping",
+    bgcol=c("steelblue1","sienna1","yellowgreen","red","blue","yellow","purple","green","white","#1f77b4", '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2')[groups],
+    shape = "straight", labels = "")
+  add.cluster.boundaries(model, clustering=groups)
+}
+```
+
+### Análisis de las observaciones de cada cluster
+
+```{r}
+if (!empty_nodes) {
+  # Asignamos a cada registro su clúster
+  df$cluster <- groups[model$unit.classif]
+}
+```
+
+Nuevos dataframes por cluster
+
+```{r}
+if (!empty_nodes) {
+  # Creo nuevos dataframes, uno por cada clúster.
+  df.cluster01 <- subset(df, cluster==1)
+  df.cluster02 <- subset(df, cluster==2)
+  df.cluster03 <- subset(df, cluster==3)
+  df.cluster04 <- subset(df, cluster==4)
+  df.cluster05 <- subset(df, cluster==5)
+  df.cluster06 <- subset(df, cluster==6)
+  df.cluster07 <- subset(df, cluster==7)
+  df.cluster08 <- subset(df, cluster==8)
+  df.cluster09 <- subset(df, cluster==9)
+  df.cluster10 <- subset(df, cluster==10)
+
+  # Extraigo del dataframe las features.
+  df.cluster01 <- select(df.cluster01, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster02 <- select(df.cluster02, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster03 <- select(df.cluster03, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster04 <- select(df.cluster04, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster05 <- select(df.cluster05, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster06 <- select(df.cluster06, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster07 <- select(df.cluster07, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster08 <- select(df.cluster08, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster09 <- select(df.cluster09, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+  df.cluster10 <- select(df.cluster10, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+}
+```
+
+```{r}
+if (!empty_nodes) summary(df.cluster01)
+if (!empty_nodes) summary(df.cluster02)
+if (!empty_nodes) summary(df.cluster03)
+if (!empty_nodes) summary(df.cluster04)
+if (!empty_nodes) summary(df.cluster05)
+if (!empty_nodes) summary(df.cluster06)
+if (!empty_nodes) summary(df.cluster07)
+if (!empty_nodes) summary(df.cluster08)
+if (!empty_nodes) summary(df.cluster09)
+if (!empty_nodes) summary(df.cluster10)
+```
+
+#### Número de elementos en cada clúster
+
+```{r}
+if (!empty_nodes) {
+  df.clusters.dim <- c(dim(df.cluster01)[1], dim(df.cluster02)[1], dim(df.cluster03)[1], dim(df.cluster04)[1], dim(df.cluster05)[1], dim(df.cluster06)[1], dim(df.cluster07)[1], dim(df.cluster08)[1], dim(df.cluster09)[1], dim(df.cluster10)[1])
+  barplot(df.clusters.dim,
+          names.arg = c("cluster01", "cluster02", "cluster03", "cluster04", "cluster05", "cluster06", "cluster07", "cluster08", "cluster09", "cluster10"),
+          col = "steelblue1")
+}
+```
+
+#### Distribución de los datos
+
+```{r fig.height=7}
+if (!empty_nodes) mpr.hist(df.cluster01)
+if (!empty_nodes) mpr.hist(df.cluster02)
+if (!empty_nodes) mpr.hist(df.cluster03)
+if (!empty_nodes) mpr.hist(df.cluster04)
+if (!empty_nodes) mpr.hist(df.cluster05)
+if (!empty_nodes) mpr.hist(df.cluster06)
+if (!empty_nodes) mpr.hist(df.cluster07)
+if (!empty_nodes) mpr.hist(df.cluster08)
+if (!empty_nodes) mpr.hist(df.cluster09)
+if (!empty_nodes) mpr.hist(df.cluster10)
+```
+
+```{r fig.height=5}
+if (!empty_nodes) mpr.boxplot(df.cluster01)
+if (!empty_nodes) mpr.boxplot(df.cluster02)
+if (!empty_nodes) mpr.boxplot(df.cluster03)
+if (!empty_nodes) mpr.boxplot(df.cluster04)
+if (!empty_nodes) mpr.boxplot(df.cluster05)
+if (!empty_nodes) mpr.boxplot(df.cluster06)
+if (!empty_nodes) mpr.boxplot(df.cluster07)
+if (!empty_nodes) mpr.boxplot(df.cluster08)
+if (!empty_nodes) mpr.boxplot(df.cluster09)
+if (!empty_nodes) mpr.boxplot(df.cluster10)
+```
+
+### Localización geográfica de las estaciones de medida de cada cluster
+
+```{r}
+# Agrupa por longitud y latitud para rellenar el mapa con menos datos.
+if (!empty_nodes) {
+  df.cluster01.grouped <- mpr.group_by_geo(df.cluster01)
+  df.cluster02.grouped <- mpr.group_by_geo(df.cluster02)
+  df.cluster03.grouped <- mpr.group_by_geo(df.cluster03)
+  df.cluster04.grouped <- mpr.group_by_geo(df.cluster04)
+  df.cluster05.grouped <- mpr.group_by_geo(df.cluster05)
+  df.cluster06.grouped <- mpr.group_by_geo(df.cluster06)
+  df.cluster07.grouped <- mpr.group_by_geo(df.cluster07)
+  df.cluster08.grouped <- mpr.group_by_geo(df.cluster08)
+  df.cluster09.grouped <- mpr.group_by_geo(df.cluster09)
+  df.cluster10.grouped <- mpr.group_by_geo(df.cluster10)
+}
+```
+
+```{r}
+if (!empty_nodes) mpr.draw_map(spain, df.cluster01.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster02.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster03.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster04.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster05.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster06.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster07.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster08.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster09.grouped)
+if (!empty_nodes) mpr.draw_map(spain, df.cluster10.grouped)
+```

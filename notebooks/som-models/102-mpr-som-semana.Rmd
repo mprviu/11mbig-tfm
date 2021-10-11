@@ -1,0 +1,552 @@
+---
+title: "Construcción de modelos SOM - Frecuencia datos de entrada: semana"
+output: html_notebook
+---
+
+```{r}
+source("../lib/som-utils.R")
+```
+
+# Carga del dataset de entrada.
+
+```{r}
+df <- mpr.load_data("datos_semana.csv.xz")
+```
+
+```{r}
+df
+```
+
+```{r}
+summary(df)
+```
+
+# Construcción modelos
+
+## Features: fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud
+
+```{r}
+Z <- mpr.scale_features(df, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-129.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-130.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-131.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-132.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-133.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-134.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-135.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-136.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: fecha_cnt, tmax, tmin, precip, longitud, latitud, altitud
+
+```{r}
+Z <- mpr.scale_features(df, fecha_cnt, tmax, tmin, precip, longitud, latitud, altitud)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-137.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-138.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-139.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-140.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-141.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-142.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-143.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-144.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: fecha_cnt, tmax, tmin, longitud, latitud, altitud
+
+```{r}
+Z <- mpr.scale_features(df, fecha_cnt, tmax, tmin, longitud, latitud, altitud)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-145.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-146.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-147.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-148.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-149.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-150.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-151.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-152.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: fecha_cnt, precip, longitud, latitud, altitud
+
+```{r}
+Z <- mpr.scale_features(df, fecha_cnt, precip, longitud, latitud, altitud)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-153.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-154.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-155.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-156.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-157.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-158.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-159.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-160.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud
+
+```{r}
+Z <- mpr.scale_features(df, tmax, tmin, precip, nevada, prof_nieve, longitud, latitud, altitud)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-161.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-162.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-163.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-164.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-165.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-166.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-167.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-168.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: tmax, tmin, precip, longitud, latitud, altitud
+
+```{r}
+Z <- mpr.scale_features(df, tmax, tmin, precip, longitud, latitud, altitud)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-169.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-170.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-171.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-172.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-173.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-174.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-175.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-176.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: tmax, tmin, longitud, latitud, altitud
+
+```{r}
+Z <- mpr.scale_features(df, tmax, tmin, longitud, latitud, altitud)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-177.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-178.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-179.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-180.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-181.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-182.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-183.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-184.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: precip, longitud, latitud, altitud
+
+```{r}
+Z <- mpr.scale_features(df, precip, longitud, latitud, altitud)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-185.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-186.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-187.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-188.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-189.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-190.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-191.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-192.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: fecha_cnt, tmax, tmin, precip, nevada, prof_nieve
+
+```{r}
+Z <- mpr.scale_features(df, fecha_cnt, tmax, tmin, precip, nevada, prof_nieve)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-193.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-194.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-195.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-196.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-197.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-198.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-199.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-200.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: fecha_cnt, tmax, tmin, precip
+
+```{r}
+Z <- mpr.scale_features(df, fecha_cnt, tmax, tmin, precip)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-201.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-202.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-203.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-204.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-205.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-206.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-207.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-208.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: fecha_cnt, tmax, tmin
+
+```{r}
+Z <- mpr.scale_features(df, fecha_cnt, tmax, tmin)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-209.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-210.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-211.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-212.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-213.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-214.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-215.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-216.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: fecha_cnt, precip
+
+```{r}
+Z <- mpr.scale_features(df, fecha_cnt, precip)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-217.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-218.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-219.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-220.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-221.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-222.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-223.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-224.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: tmax, tmin, precip, nevada, prof_nieve
+
+```{r}
+Z <- mpr.scale_features(df, tmax, tmin, precip, nevada, prof_nieve)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-225.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-226.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-227.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-228.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-229.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-230.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-231.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-232.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: tmax, tmin, precip
+
+```{r}
+Z <- mpr.scale_features(df, tmax, tmin, precip)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-233.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-234.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-235.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-236.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-237.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-238.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-239.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-240.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: tmax, tmin
+
+```{r}
+Z <- mpr.scale_features(df, tmax, tmin)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-241.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-242.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-243.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-244.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-245.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-246.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-247.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-248.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
+
+## Features: precip
+
+```{r}
+Z <- mpr.scale_features(df, precip)
+summary(Z)
+```
+
+```{r}
+model <- mpr.create_som(Z, 5, 5, 1000, "som-249.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 5, 5, 10000, "som-250.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 1000, "som-251.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 10, 10, 10000, "som-252.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 1000, "som-253.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 25, 25, 10000, "som-254.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 1000, "som-255.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+
+model <- mpr.create_som(Z, 50, 50, 10000, "som-256.rds.xz")
+if (!is.null(model)) { plot(model, type="changes") }
+```
