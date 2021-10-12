@@ -1,6 +1,6 @@
 FROM rocker/tidyverse:latest
 
-MAINTAINER Mario del Pozo <mariodpros@gmail.com>
+MAINTAINER Mario del Pozo
 
 # Install utilities and dependencies.
 RUN set -eux; \

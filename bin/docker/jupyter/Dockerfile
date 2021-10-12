@@ -1,6 +1,6 @@
 FROM jupyter/scipy-notebook:latest
 
-MAINTAINER Mario del Pozo <mariodpros@gmail.com>
+MAINTAINER Mario del Pozo
 
 # Install additional libraries.
 RUN set -eux; \
